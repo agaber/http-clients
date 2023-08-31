@@ -1,0 +1,21 @@
+http-client:
+  acquireTimeout: PT10S
+  compress: true
+  connectionTimeout: PT2S
+  evictInterval: PT30S
+  idleTime: PT60S
+  keepAlive: true
+  maxConnections: 16
+  maxLifeTime: PT120S
+  maxResponseBufferSize: 5MB
+  metrics: false
+  pendingAcquireMaxCount: 500
+  readTimeout: PT40S
+  wiretap: false
+  writeTimeout: PT40S
+
+spring:
+  datasource:
+    maximum-pool-size: 20
+  main:
+   banner-mode: off
