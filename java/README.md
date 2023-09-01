@@ -6,7 +6,7 @@ ID or name.
 #### Motivation
 
 This app is just a reference for how to make REST API calls in a Spring Boot app
-and how to unit test it.
+with Spring Boot and Reactive/WebFlux including unit tests.
 
 It calls the MLB Stats API to lookup team and player information.
 
@@ -43,6 +43,3 @@ $ ./gradlew clean build
 $ java -jar  build/libs/sports-stats-0.0.1-SNAPSHOT.jar \
   --baseball.team=137
 ```
-
-
-
