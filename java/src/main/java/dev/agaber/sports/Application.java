@@ -1,6 +1,7 @@
 package dev.agaber.sports;
 
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import dev.agaber.sports.baseball.BaseballTeamService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
@@ -13,11 +14,24 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.util.concurrent.Executors;
 
 @Slf4j
 @SpringBootApplication
 public class Application implements CommandLineRunner {
+  private final BaseballTeamService baseballTeamService;
+  private final Scheduler scheduler;
+  private final boolean isTest;
+
+  Application(
+      @Value("${isTest}") boolean isTest,
+      BaseballTeamService baseballTeamService,
+      Scheduler scheduler) {
+    this.baseballTeamService = baseballTeamService;
+    this.isTest = isTest;
+    this.scheduler = scheduler;
+  }
 
   public static void main(String[] args) {
     new SpringApplicationBuilder(Application.class)
@@ -27,7 +41,19 @@ public class Application implements CommandLineRunner {
 
   @Override
   public void run(String... args) throws Exception {
-    log.info("cool");
+    if (isTest) {
+      // Without this hack, the application will run during unit tests.
+      System.err.println("isTest set to true. Exiting.");
+      return;
+    }
+
+    var teamInfo = baseballTeamService.execute()
+        .subscribeOn(scheduler)
+        .block(Duration.ofSeconds(10));
+    System.out.println(teamInfo);
+
+    // Must dispose otherwise the command line app will not terminate.
+    scheduler.dispose();
   }
 
   @Configuration

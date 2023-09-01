@@ -19,3 +19,9 @@ spring:
     maximum-pool-size: 20
   main:
    banner-mode: off
+
+baseball:
+  statsApiUrl: https://statsapi.mlb.com
+  team: ~
+
+isTest: false

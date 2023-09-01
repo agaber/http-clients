@@ -1,0 +1,5 @@
+isTest: true
+
+baseball:
+  statsApiUrl: ~
+  team: ~
