@@ -6,7 +6,7 @@ ID or name.
 #### Motivation
 
 This app is just a reference for how to make REST API calls in a Spring Boot app
-with Spring Boot and Reactive/WebFlux including unit tests.
+with Reactive/WebFlux including unit tests.
 
 It calls the MLB Stats API to lookup team and player information.
 
