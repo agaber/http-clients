@@ -42,9 +42,7 @@ public final class BaseballTeamService {
     this.clock = clock;
     this.config = config;
     this.objectMapper = objectMapper;
-    this.webClient = webClient.mutate()
-        .baseUrl(config.getStatsApiUrl())
-        .build();
+    this.webClient = webClient;
   }
 
   public Mono<String> execute() {
@@ -67,7 +65,7 @@ public final class BaseballTeamService {
     return webClient.get()
         .uri(uri)
         .exchangeToMono(response -> {
-          if (response.statusCode()==HttpStatus.OK) {
+          if (response.statusCode() == HttpStatus.OK) {
             return response.bodyToMono(MlbRoster.class);
           } else {
             return response.createError();
@@ -76,7 +74,7 @@ public final class BaseballTeamService {
   }
 
   private Mono<Optional<MlbTeam>> fetchMlbTeam(String query) {
-    return isInt(query) ? fetchMlbTeamById(query):fetchMlbTeamByName(query);
+    return isInt(query) ? fetchMlbTeamById(query) : fetchMlbTeamByName(query);
   }
 
   private Mono<Optional<MlbTeam>> fetchMlbTeamById(String teamId) {
@@ -96,9 +94,9 @@ public final class BaseballTeamService {
     return webClient.get()
         .uri(uri)
         .exchangeToMono(response -> {
-          if (response.statusCode()==HttpStatus.OK) {
+          if (response.statusCode() == HttpStatus.OK) {
             return response.bodyToMono(JsonNode.class).map(this::parseFirstMlbTeam);
-          } else if (response.statusCode()==HttpStatus.NOT_FOUND) {
+          } else if (response.statusCode() == HttpStatus.NOT_FOUND) {
             log.warn("Could not find team with ID {}", teamId);
             return Mono.just(Optional.empty());
           } else {
@@ -119,7 +117,7 @@ public final class BaseballTeamService {
     return webClient.get()
         .uri(uri)
         .exchangeToMono(response -> {
-          if (response.statusCode()==HttpStatus.OK) {
+          if (response.statusCode() == HttpStatus.OK) {
             return response.bodyToMono(JsonNode.class)
                 .map(this::parseAllMlbTeams)
                 .map(teams -> filterTeamsByName(teams, teamName));
@@ -184,7 +182,7 @@ public final class BaseballTeamService {
   // MLB statsapi objects.
 
   @Builder(toBuilder = true)
-  private record MlbPerson(int id, String fullName) {}
+  private record MlbPerson(int id, String fullName) { }
 
   @Builder(toBuilder = true)
   private record MlbPlayer(
@@ -195,13 +193,13 @@ public final class BaseballTeamService {
   }
 
   @Builder(toBuilder = true)
-  private record MlbPosition(String name, String type, String abbreviation) {}
+  private record MlbPosition(String name, String type, String abbreviation) { }
 
   @Builder(toBuilder = true)
-  private record MlbRoster(ImmutableList<MlbPlayer> roster) {}
+  private record MlbRoster(ImmutableList<MlbPlayer> roster) { }
 
   @Builder(toBuilder = true)
-  private record MlbStatus(String description) {}
+  private record MlbStatus(String description) { }
 
   @Builder(toBuilder = true)
   private record MlbTeam(
