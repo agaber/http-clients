@@ -227,6 +227,5 @@ public final class BaseballTeamService {
   }
 
   @Builder(toBuilder = true)
-  private record Id(int id) {
-  }
+  private record Id(int id) {}
 }
