@@ -10,13 +10,14 @@ functionally identical to the Java version.
 
 #### Tech Stack
 
-* Spring Boot - I used it because it provids dependency injection and yaml
-  config files out of the box.
+* Spring Boot - I used it because it provides dependency injection and yaml
+  config files out of the box. I'm guessing that most server-side work done in
+  Kotlin is probably using Spring so it seemed worthwhile to include it as a
+  reference. Android dev story is probably different.
 * ktor - For making HTTP calls.
-* Kotlin coroutines - I wanted to learn it and I would most likely use it in any
-  real scenario but because the logic here requires synchronous operations,
-  it's not necessary (It's the same thing in the  Java version where I go out of
-  my way to use Flux even though there's no actual benefit).
+* Kotlin coroutines - The built-in way to do async things in Kotlin. This
+  project doesn't really need async behavior so I shoehorned an unnecessary
+  API call just so I could demonstrate this framework.
 
 #### Execute
 

@@ -11,12 +11,12 @@ import com.google.common.collect.Iterables;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -46,14 +46,19 @@ public final class BaseballTeamService {
   }
 
   public Mono<String> execute() {
-    Mono<MlbTeam> mlbTeamMono = fetchMlbTeam(config.getTeam())
+    // The call to lookup Venue is unnecessary because enough venue information
+    // is already present in the team response. It's here to give a reason for
+    // using async Flux code.
+    var teamMono = fetchMlbTeam(config.getTeam())
         .filter(Optional::isPresent)
         .map(Optional::get);
-    return mlbTeamMono
-        .flatMap(this::fetchMlbRoster)
-        .zipWith(mlbTeamMono)
-        .map(tuple -> printRoster(tuple.getT1(), tuple.getT2()))
-        .defaultIfEmpty("");
+    var rosterMono = teamMono.flatMap(this::fetchMlbRoster);
+    var venueMono = teamMono.flatMap(team -> fetchMlbVenueById(team.venue().id()));
+    return teamMono
+        .zipWith(rosterMono, (team, roster) -> Tuples.of(team, roster))
+        .zipWith(venueMono, (tuple, venue) -> Tuples.of(tuple.getT1(), tuple.getT2(), venue))
+        .map(tuple -> printRoster(tuple.getT2(), tuple.getT1(), tuple.getT3()))
+        .defaultIfEmpty("Not Found");
   }
 
   private Mono<MlbRoster> fetchMlbRoster(MlbTeam team) {
@@ -64,17 +69,15 @@ public final class BaseballTeamService {
         .toUri();
     return webClient.get()
         .uri(uri)
-        .exchangeToMono(response -> {
-          if (response.statusCode() == HttpStatus.OK) {
-            return response.bodyToMono(MlbRoster.class);
-          } else {
-            return response.createError();
-          }
-        });
+        .exchangeToMono(response ->
+            response.statusCode() == HttpStatus.OK
+                ? response.bodyToMono(MlbRoster.class)
+                : response.createError());
   }
 
   private Mono<Optional<MlbTeam>> fetchMlbTeam(String query) {
-    return isInt(query) ? fetchMlbTeamById(query) : fetchMlbTeamByName(query);
+    boolean isInt = query.matches("^[0-9]*$");
+    return isInt ? fetchMlbTeamById(query) : fetchMlbTeamByName(query);
   }
 
   private Mono<Optional<MlbTeam>> fetchMlbTeamById(String teamId) {
@@ -95,7 +98,10 @@ public final class BaseballTeamService {
         .uri(uri)
         .exchangeToMono(response -> {
           if (response.statusCode() == HttpStatus.OK) {
-            return response.bodyToMono(JsonNode.class).map(this::parseFirstMlbTeam);
+            return response.bodyToMono(JsonNode.class)
+                .map(json -> json.get("teams"))
+                .map(v -> objectMapper.convertValue(v, new TypeReference<List<MlbTeam>>() {}))
+                .map(teams -> teams.stream().filter(MlbTeam::active).findFirst());
           } else if (response.statusCode() == HttpStatus.NOT_FOUND) {
             log.warn("Could not find team with ID {}", teamId);
             return Mono.just(Optional.empty());
@@ -119,7 +125,8 @@ public final class BaseballTeamService {
         .exchangeToMono(response -> {
           if (response.statusCode() == HttpStatus.OK) {
             return response.bodyToMono(JsonNode.class)
-                .map(this::parseAllMlbTeams)
+                .map(json -> json.get("teams"))
+                .map(j -> objectMapper.convertValue(j, new TypeReference<List<MlbTeam>>() {}))
                 .map(teams -> filterTeamsByName(teams, teamName));
           } else {
             return response.createError();
@@ -138,31 +145,41 @@ public final class BaseballTeamService {
     return Optional.ofNullable(Iterables.getOnlyElement(matches, null));
   }
 
-  private static boolean isInt(String string) {
-    return string.matches("^[0-9]*$");
+  private Mono<MlbVenue> fetchMlbVenueById(int venueId) {
+    var uri = UriComponentsBuilder.newInstance()
+        .uri(URI.create(config.getStatsApiUrl()))
+        .path("/api/v1/venues/" + venueId)
+        .build(true)
+        .toUri();
+    return webClient.get()
+        .uri(uri)
+        .exchangeToMono(response -> {
+          if (response.statusCode() == HttpStatus.OK) {
+            return response.bodyToMono(JsonNode.class)
+                .map(json -> json.get("venues"))
+                .map(v -> objectMapper.convertValue(v, new TypeReference<List<MlbVenue>>() {
+                }))
+                .map(venues -> Iterables.getOnlyElement(venues));
+          } else {
+            return response.createError();
+          }
+        });
   }
 
-  private ImmutableList<MlbTeam> parseAllMlbTeams(JsonNode json) {
-    var teamsJson = json.get("teams");
-    return objectMapper.convertValue(teamsJson, new TypeReference<>() {});
-  }
-
-  private Optional<MlbTeam> parseFirstMlbTeam(JsonNode json) {
-    ImmutableList<MlbTeam> teams = parseAllMlbTeams(json);
-    return teams.stream().filter(MlbTeam::active).findFirst();
-  }
-
-  private String printRoster(MlbRoster mlbRoster, MlbTeam mlbTeam) {
+  private String printRoster(MlbRoster roster, MlbTeam team, MlbVenue venue) {
     var sw = new StringWriter();
-    var csvFormat = CSVFormat.DEFAULT.builder()
-        .setHeader("Team", "Jersey", "Name", "Position")
-        .build();
-    try (var printer = new CSVPrinter(sw, csvFormat)) {
-      var players = mlbRoster.roster().stream()
+    try (var printer = CSVFormat.DEFAULT.print(sw)) {
+      printer.printRecord("Team", "Jersey", "Name", "Position", "Home Stadium");
+      var players = roster.roster().stream()
           .sorted(comparing(player -> player.position.abbreviation))
           .collect(toImmutableList());
       for (var player : players) {
-        printRow(printer, player, mlbTeam);
+        printer.printRecord(
+            team.name(),
+            player.jerseyNumber(),
+            player.person().fullName(),
+            player.position().abbreviation(),
+            venue.name);
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -170,19 +187,11 @@ public final class BaseballTeamService {
     return sw.toString();
   }
 
-  private static void printRow(CSVPrinter printer, MlbPlayer player, MlbTeam team)
-      throws IOException {
-    printer.printRecord(
-        team.name(),
-        player.jerseyNumber(),
-        player.person().fullName(),
-        player.position().abbreviation());
-  }
-
   // MLB statsapi objects.
 
   @Builder(toBuilder = true)
-  private record MlbPerson(int id, String fullName) { }
+  private record MlbPerson(int id, String fullName) {
+  }
 
   @Builder(toBuilder = true)
   private record MlbPlayer(
@@ -193,13 +202,16 @@ public final class BaseballTeamService {
   }
 
   @Builder(toBuilder = true)
-  private record MlbPosition(String name, String type, String abbreviation) { }
+  private record MlbPosition(String name, String type, String abbreviation) {
+  }
 
   @Builder(toBuilder = true)
-  private record MlbRoster(ImmutableList<MlbPlayer> roster) { }
+  private record MlbRoster(ImmutableList<MlbPlayer> roster) {
+  }
 
   @Builder(toBuilder = true)
-  private record MlbStatus(String description) { }
+  private record MlbStatus(String description) {
+  }
 
   @Builder(toBuilder = true)
   private record MlbTeam(
@@ -207,6 +219,18 @@ public final class BaseballTeamService {
       boolean active,
       String name,
       String locationName,
-      String teamName) {
+      String teamName,
+      Id venue) {
+  }
+
+  @Builder(toBuilder = true)
+  private record MlbVenue(
+      int id,
+      String name,
+      boolean active) {
+  }
+
+  @Builder(toBuilder = true)
+  private record Id(int id) {
   }
 }

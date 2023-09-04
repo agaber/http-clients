@@ -33,6 +33,16 @@ class BaseballServiceTest {
             to  respond("teams-allmlb.json"),
         "GET http://fake:8080/api/v1/teams/137/roster"
             to  respond("team-137-roster.json"),
+        "GET http://fake:8080/api/v1/venues/2395"
+            to  respondJson("""
+              { "venues": [{
+                  "id": 2395,
+                  "name": "Oracle Park",
+                  "link": "/api/v1/venues/2395",
+                  "active": true,
+                  "season": "2023"
+                }] }
+              """.trimIndent()),
       )
       val requestStr = "${request.method.value} ${request.url}"
       responseMap.getOrDefault(requestStr, respond(HttpStatusCode.NotFound))
@@ -48,35 +58,44 @@ class BaseballServiceTest {
       config.team = "137"
       val result = baseballService.execute()
       assertThat(result).isEqualToNormalizingNewlines("""
-        Team,Jersey,Name,Position
-        San Francisco Giants,38,Alex Cobb,P
-        San Francisco Giants,57,Alex Wood,P
-        San Francisco Giants,13,Austin Slater,LF
-        San Francisco Giants,2,Blake Sabol,C
-        San Francisco Giants,75,Camilo Doval,P
-        San Francisco Giants,6,Casey Schmitt,SS
-        San Francisco Giants,7,J.D. Davis,3B
-        San Francisco Giants,34,Jakob Junis,P
-        San Francisco Giants,23,Joc Pederson,DH
-        San Francisco Giants,45,Kyle Harrison,P
-        San Francisco Giants,31,LaMonte Wade Jr.,1B
-        San Francisco Giants,62,Logan Webb,P
-        San Francisco Giants,77,Luke Jackson,P
-        San Francisco Giants,5,Mike Yastrzemski,CF
-        San Francisco Giants,17,Mitch Haniger,LF
-        San Francisco Giants,14,Patrick Bailey,C
-        San Francisco Giants,18,Paul DeJong,SS
-        San Francisco Giants,74,Ryan Walker,P
-        San Francisco Giants,54,Scott Alexander,P
-        San Francisco Giants,52,Sean Manaea,P
-        San Francisco Giants,33,Taylor Rogers,P
-        San Francisco Giants,39,Thairo Estrada,2B
-        San Francisco Giants,43,Tristan Beck,P
-        San Francisco Giants,71,Tyler Rogers,P
-        San Francisco Giants,53,Wade Meckler,OF
-        San Francisco Giants,41,Wilmer Flores,1B
+        Team,Jersey,Name,Position,Home Stadium
+        San Francisco Giants,38,Alex Cobb,P,Oracle Park
+        San Francisco Giants,57,Alex Wood,P,Oracle Park
+        San Francisco Giants,13,Austin Slater,LF,Oracle Park
+        San Francisco Giants,2,Blake Sabol,C,Oracle Park
+        San Francisco Giants,75,Camilo Doval,P,Oracle Park
+        San Francisco Giants,6,Casey Schmitt,SS,Oracle Park
+        San Francisco Giants,7,J.D. Davis,3B,Oracle Park
+        San Francisco Giants,34,Jakob Junis,P,Oracle Park
+        San Francisco Giants,23,Joc Pederson,DH,Oracle Park
+        San Francisco Giants,45,Kyle Harrison,P,Oracle Park
+        San Francisco Giants,31,LaMonte Wade Jr.,1B,Oracle Park
+        San Francisco Giants,62,Logan Webb,P,Oracle Park
+        San Francisco Giants,77,Luke Jackson,P,Oracle Park
+        San Francisco Giants,5,Mike Yastrzemski,CF,Oracle Park
+        San Francisco Giants,17,Mitch Haniger,LF,Oracle Park
+        San Francisco Giants,14,Patrick Bailey,C,Oracle Park
+        San Francisco Giants,18,Paul DeJong,SS,Oracle Park
+        San Francisco Giants,74,Ryan Walker,P,Oracle Park
+        San Francisco Giants,54,Scott Alexander,P,Oracle Park
+        San Francisco Giants,52,Sean Manaea,P,Oracle Park
+        San Francisco Giants,33,Taylor Rogers,P,Oracle Park
+        San Francisco Giants,39,Thairo Estrada,2B,Oracle Park
+        San Francisco Giants,43,Tristan Beck,P,Oracle Park
+        San Francisco Giants,71,Tyler Rogers,P,Oracle Park
+        San Francisco Giants,53,Wade Meckler,OF,Oracle Park
+        San Francisco Giants,41,Wilmer Flores,1B,Oracle Park
 
         """.trimIndent())
+    }
+  }
+
+  @Test
+  fun `lookup team by id and team not found`() {
+    runBlocking {
+      config.team = "98372"
+      val result = baseballService.execute()
+      assertThat(result).isEqualTo("Not Found")
     }
   }
 
@@ -86,37 +105,53 @@ class BaseballServiceTest {
       config.team = "giants"
       val result = baseballService.execute()
       assertThat(result).isEqualToNormalizingNewlines("""
-        Team,Jersey,Name,Position
-        San Francisco Giants,38,Alex Cobb,P
-        San Francisco Giants,57,Alex Wood,P
-        San Francisco Giants,13,Austin Slater,LF
-        San Francisco Giants,2,Blake Sabol,C
-        San Francisco Giants,75,Camilo Doval,P
-        San Francisco Giants,6,Casey Schmitt,SS
-        San Francisco Giants,7,J.D. Davis,3B
-        San Francisco Giants,34,Jakob Junis,P
-        San Francisco Giants,23,Joc Pederson,DH
-        San Francisco Giants,45,Kyle Harrison,P
-        San Francisco Giants,31,LaMonte Wade Jr.,1B
-        San Francisco Giants,62,Logan Webb,P
-        San Francisco Giants,77,Luke Jackson,P
-        San Francisco Giants,5,Mike Yastrzemski,CF
-        San Francisco Giants,17,Mitch Haniger,LF
-        San Francisco Giants,14,Patrick Bailey,C
-        San Francisco Giants,18,Paul DeJong,SS
-        San Francisco Giants,74,Ryan Walker,P
-        San Francisco Giants,54,Scott Alexander,P
-        San Francisco Giants,52,Sean Manaea,P
-        San Francisco Giants,33,Taylor Rogers,P
-        San Francisco Giants,39,Thairo Estrada,2B
-        San Francisco Giants,43,Tristan Beck,P
-        San Francisco Giants,71,Tyler Rogers,P
-        San Francisco Giants,53,Wade Meckler,OF
-        San Francisco Giants,41,Wilmer Flores,1B
+        Team,Jersey,Name,Position,Home Stadium
+        San Francisco Giants,38,Alex Cobb,P,Oracle Park
+        San Francisco Giants,57,Alex Wood,P,Oracle Park
+        San Francisco Giants,13,Austin Slater,LF,Oracle Park
+        San Francisco Giants,2,Blake Sabol,C,Oracle Park
+        San Francisco Giants,75,Camilo Doval,P,Oracle Park
+        San Francisco Giants,6,Casey Schmitt,SS,Oracle Park
+        San Francisco Giants,7,J.D. Davis,3B,Oracle Park
+        San Francisco Giants,34,Jakob Junis,P,Oracle Park
+        San Francisco Giants,23,Joc Pederson,DH,Oracle Park
+        San Francisco Giants,45,Kyle Harrison,P,Oracle Park
+        San Francisco Giants,31,LaMonte Wade Jr.,1B,Oracle Park
+        San Francisco Giants,62,Logan Webb,P,Oracle Park
+        San Francisco Giants,77,Luke Jackson,P,Oracle Park
+        San Francisco Giants,5,Mike Yastrzemski,CF,Oracle Park
+        San Francisco Giants,17,Mitch Haniger,LF,Oracle Park
+        San Francisco Giants,14,Patrick Bailey,C,Oracle Park
+        San Francisco Giants,18,Paul DeJong,SS,Oracle Park
+        San Francisco Giants,74,Ryan Walker,P,Oracle Park
+        San Francisco Giants,54,Scott Alexander,P,Oracle Park
+        San Francisco Giants,52,Sean Manaea,P,Oracle Park
+        San Francisco Giants,33,Taylor Rogers,P,Oracle Park
+        San Francisco Giants,39,Thairo Estrada,2B,Oracle Park
+        San Francisco Giants,43,Tristan Beck,P,Oracle Park
+        San Francisco Giants,71,Tyler Rogers,P,Oracle Park
+        San Francisco Giants,53,Wade Meckler,OF,Oracle Park
+        San Francisco Giants,41,Wilmer Flores,1B,Oracle Park
 
         """.trimIndent())
     }
   }
+
+  @Test
+  fun `lookup team by name and team not found`() {
+    runBlocking {
+      config.team = "knicks"
+      val result = baseballService.execute()
+      assertThat(result).isEqualTo("Not Found")
+    }
+  }
+
+  private fun MockRequestHandleScope.respondJson(json: String) =
+    respond(
+      content = ByteReadChannel(json),
+      headers = headersOf(HttpHeaders.ContentType, "application/json"),
+      status = HttpStatusCode.OK,
+    )
 
   private fun MockRequestHandleScope.respond(fileName: String) =
     respond(

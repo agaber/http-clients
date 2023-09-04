@@ -40,13 +40,12 @@ class BaseballService(
 ) {
 
   suspend fun execute(): String {
-    val team = config.team
+    val query = config.team
+    val team = fetchMlbTeam(query) ?: return "Not Found"
     return coroutineScope {
-      async(Dispatchers.IO) {
-        fetchMlbTeam(team)?.let { mlbTeam ->
-          printRoster(fetchMlbRoster(mlbTeam), mlbTeam)
-        } ?: ""
-      }.await()
+      val roster = async { fetchMlbRoster(team) }
+      val venue = async { fetchMlbVenueById(team.venue.id) }
+      printRoster(roster.await(), team, venue.await()!!)
     }
   }
 
@@ -97,7 +96,7 @@ class BaseballService(
           .firstOrNull { it.active }
       }
       HttpStatusCode.NotFound -> null
-      else -> throw Exception("Error looking up ${teamId}: ${response.status}")
+      else -> throw Exception("Error looking up team ${teamId}: ${response.status}")
     }
   }
 
@@ -118,25 +117,57 @@ class BaseballService(
     return when (response.status) {
       HttpStatusCode.OK -> {
         val respJson = json.parseToJsonElement(response.bodyAsText()).jsonObject
-        val matches = json.decodeFromJsonElement<List<MlbTeam>>(respJson["teams"]!!)
-          .filter { it.active }
-          .filter { it.name.contains(name, true) }
+        val matches =
+          json.decodeFromJsonElement<List<MlbTeam>>(respJson["teams"]!!)
+            .filter { it.active }
+            .filter { it.name.contains(name, true) }
         if (matches.size > 1) {
           log.warn { "Multiple teams matched $name. Ambiguous match results in empty response" }
           return null
         }
-        return matches[0]
+        return matches.firstOrNull()
       }
-      else -> throw Exception("Error looking up ${name}: ${response.status}")
+      else -> throw Exception("Error looking up team ${name}: ${response.status}")
     }
   }
 
-  private fun printRoster(roster: MlbRoster, team: MlbTeam): String {
+  /**
+   * Fetches a venue from the MLB Statsapi using the venue ID.
+   *
+   * <p>This call is completely unnecessary because the venue name is already
+   * included in the team lookup. I'm just doing this because I want an excuse
+   * to do some things in parallel.
+   */
+  private suspend fun fetchMlbVenueById(id: Int): MlbVenue? {
+    val statsApiParts = urlParts(config.statsApiUrl)
+    val response: HttpResponse = httpClient.get {
+      headers { headers }
+      url {
+        protocol = statsApiParts.first
+        host = statsApiParts.second
+        port = statsApiParts.third
+        path("/api/v1/venues/${id}")
+      }
+    }
+    return when (response.status) {
+      HttpStatusCode.OK -> {
+        val respJson = json.parseToJsonElement(response.bodyAsText()).jsonObject
+        return json.decodeFromJsonElement<List<MlbVenue>>(respJson["venues"]!!)
+          .firstOrNull { it.active }
+      }
+      HttpStatusCode.NotFound -> null
+      else -> throw Exception("Error looking up venue ${id}: ${response.status}")
+    }
+  }
+
+  private fun printRoster(
+      roster: MlbRoster, team: MlbTeam, venue: MlbVenue): String {
     val sw = StringWriter()
     CSVFormat.DEFAULT.print(sw).apply {
-      printRecord("Team", "Jersey", "Name", "Position")
-      roster.roster.filter { it.status.description == "Active" }.forEach {
-        printRecord(team.name, it.jerseyNumber, it.person.fullName, it.position.abbreviation)
+      printRecord("Team", "Jersey", "Name", "Position", "Home Stadium")
+      roster.roster.filter { it.status.description=="Active" }.forEach {
+        printRecord(
+            team.name, it.jerseyNumber, it.person.fullName, it.position.abbreviation, venue.name)
       }
     }
     return sw.toString()
@@ -180,4 +211,15 @@ private data class MlbTeam(
   val name: String,
   val locationName: String,
   val teamName: String,
+  val venue: Id,
 )
+
+@Serializable
+private data class MlbVenue(
+  val id: Int,
+  val name: String,
+  val active: Boolean,
+)
+
+@Serializable
+private data class Id(val id: Int)
