@@ -1,0 +1,7 @@
+baseball:
+  statsApiUrl: https://statsapi.mlb.com
+  team: ~
+
+spring:
+  main:
+    banner-mode: off
