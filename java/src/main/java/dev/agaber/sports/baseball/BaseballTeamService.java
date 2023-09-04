@@ -190,8 +190,7 @@ public final class BaseballTeamService {
   // MLB statsapi objects.
 
   @Builder(toBuilder = true)
-  private record MlbPerson(int id, String fullName) {
-  }
+  private record MlbPerson(int id, String fullName) {}
 
   @Builder(toBuilder = true)
   private record MlbPlayer(
@@ -202,16 +201,13 @@ public final class BaseballTeamService {
   }
 
   @Builder(toBuilder = true)
-  private record MlbPosition(String name, String type, String abbreviation) {
-  }
+  private record MlbPosition(String name, String type, String abbreviation) {}
 
   @Builder(toBuilder = true)
-  private record MlbRoster(ImmutableList<MlbPlayer> roster) {
-  }
+  private record MlbRoster(ImmutableList<MlbPlayer> roster) {}
 
   @Builder(toBuilder = true)
-  private record MlbStatus(String description) {
-  }
+  private record MlbStatus(String description) {}
 
   @Builder(toBuilder = true)
   private record MlbTeam(
