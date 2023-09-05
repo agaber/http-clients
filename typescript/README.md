@@ -77,4 +77,4 @@ Because I always forget...
     $ npm install axios axios-mock-adapter --save-dev
     ```
 
-1. Mess with config config files (package.json, tsconfig.json as needed).
+1. Mess with config config files (package.json, tsconfig.json) as needed.
