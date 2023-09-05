@@ -12,21 +12,23 @@ functionally identical to the other versions in this repo.
 
 * TypeScript
 * Node.js
-* Jest
 * Axios
+* Jest
+* Yargs
 
 #### Execute
 
 Look up by query.
 
 ```sh
-$ npm start mets
+$ npm install
+$ npm start -- --team=mets
 ```
 
 Lookup by ID
 
 ```sh
-$ npm start 137
+$ npm start -- --team=137
 ```
 
 Run unit tests
@@ -62,7 +64,8 @@ Because I always forget...
     $ npm install --save-dev typescript # alternatively, just npm i -D
     $ npm install --save-dev ts-node
     $ npm install --save-dev @types/node
-    $ npm install axios # for http
+    $ npm install --save axios # for http
+    $ npm install --save yargs
     $ tsc --init
     ```
 
@@ -73,7 +76,6 @@ Because I always forget...
     $ npm install --save-dev ts-jest
     $ npm install --save-dev @types/jest
     $ npx ts-jest config:init
-    # for axios:
     $ npm install axios axios-mock-adapter --save-dev
     ```
 
