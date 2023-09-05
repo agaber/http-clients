@@ -6,20 +6,22 @@
   "scripts": {
     "build": "tsc -p .",
     "clean": "rm -rf ./dist",
-    "start": "tsc -p . && ts-node ./dist/index.js",
-    "test": "tsc -p . && jasmine"
+    "start": "tsc -p . && ts-node ./dist/app.js",
+    "test": "tsc -p . && jest"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/jasmine": "^4.3.5",
+    "@types/jest": "^29.5.4",
     "@types/node": "^20.5.9",
-    "jasmine": "^5.1.0",
+    "axios": "^1.5.0",
+    "axios-mock-adapter": "^1.21.5",
+    "jest": "^29.6.4",
+    "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "axios": "^1.5.0",
     "csv-stringify": "^6.4.2"
   }
 }

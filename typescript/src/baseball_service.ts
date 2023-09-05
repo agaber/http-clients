@@ -55,9 +55,9 @@ export class BaseballService {
   }
 
   private async fetchMlbTeamByName(name: string): Promise<MlbTeam | null> {
-    var season = new Date().getFullYear();
+    var season = new Date().getFullYear().toString();
     return axios.get<{ teams: MlbTeam[] }>(
-      `${this.baseUrl}/api/v1/teams/`, {
+      `${this.baseUrl}/api/v1/teams`, {
       headers: HEADERS,
       params: { season, 'sportIds': '1' },
     }).then(response => {
