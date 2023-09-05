@@ -44,9 +44,7 @@ $ npm run build
 
 ### Creating this project.
 
-Because I always forget
-
-## Create a new Node.js project with TypeScript.
+Because I always forget...
 
 1. Install npm.
 1. Install TypeScript
