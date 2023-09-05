@@ -7,5 +7,6 @@ indent_style = space
 insert_final_newline = true
 max_line_length = 80
 trim_trailing_whitespace = true
+continue_indent_size = 4
 ij_continuation_indent_size = 4
 ij_visual_guides = 80,100

@@ -2,9 +2,10 @@
   "name": "sports-stats",
   "version": "1.0.0",
   "description": "Making HTTP calls in TypeScript and Node.js.",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "build": "tsc -p .",
+    "clean": "rm -rf ./dist",
     "start": "tsc -p . && ts-node ./dist/index.js",
     "test": "tsc -p . && jasmine"
   },
@@ -16,5 +17,9 @@
     "jasmine": "^5.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "axios": "^1.5.0",
+    "csv-stringify": "^6.4.2"
   }
 }
