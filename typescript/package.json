@@ -1,0 +1,20 @@
+{
+  "name": "sports-stats",
+  "version": "1.0.0",
+  "description": "Making HTTP calls in TypeScript and Node.js.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.5.9",
+    "jasmine": "^5.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  }
+}
