@@ -7,6 +7,8 @@ describe('Baseball service', () => {
   let baseballService: BaseballService;
 
   beforeEach(() => {
+    const mockDate = new Date(2020, 9, 5);
+    jest.spyOn(global, 'Date').mockImplementation(() => mockDate);
     baseballService = new BaseballService('http://fake');
     axiosMock = new AxiosMockAdapter(axios);
   });
@@ -45,7 +47,7 @@ describe('Baseball service', () => {
     axiosMock
       .onGet(
         'http://fake/api/v1/teams',
-        { params: { season: '2023', sportIds: '1' } })
+        { params: { season: '2020', sportIds: '1' } })
       .reply(200, TEAMS_ALLMLB_JSON);
 
     axiosMock
@@ -64,7 +66,7 @@ describe('Baseball service', () => {
     axiosMock
       .onGet(
         'http://fake/api/v1/teams',
-        { params: { season: '2023', sportIds: '1' } })
+        { params: { season: '2020', sportIds: '1' } })
       .reply(200, TEAMS_ALLMLB_JSON);
 
     const result = await baseballService.execute('knicks');
