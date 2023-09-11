@@ -58,14 +58,12 @@ Because I always forget...
 1. Initialize project dependencies.
 
     ```sh
-    $ mkdir typescript
-    $ cd typescript
     $ npm init
     $ npm install --save-dev typescript # alternatively, just npm i -D
     $ npm install --save-dev ts-node
     $ npm install --save-dev @types/node
     $ npm install --save axios # for http
-    $ npm install --save yargs
+    $ npm install --save yargs # for command line args
     $ tsc --init
     ```
 
@@ -79,4 +77,4 @@ Because I always forget...
     $ npm install axios axios-mock-adapter --save-dev
     ```
 
-1. Mess with config config files (package.json, tsconfig.json) as needed.
+1. Mess with config config files (package.json, tsconfig.json, jest.config.js) as needed.

@@ -1,4 +1,4 @@
-import { BaseballService } from './baseball_service';
+import { BaseballService } from '@/baseball_service';
 import yargs from 'yargs';
 
 const argv = yargs(process.argv.slice(2))
