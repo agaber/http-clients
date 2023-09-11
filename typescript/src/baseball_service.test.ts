@@ -2,7 +2,6 @@ import AxiosMockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { BaseballService } from '@/baseball_service';
 import * as fs from 'fs';
-import { dirname } from 'path';
 
 describe('Baseball service', () => {
   let axiosMock: AxiosMockAdapter;
