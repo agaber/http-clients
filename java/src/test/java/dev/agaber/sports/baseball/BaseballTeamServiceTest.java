@@ -43,16 +43,17 @@ final class BaseballTeamServiceTest {
   private int mockServerPort;
 
   @BeforeEach
-  void beforeEach() {
+  void beforeEach() throws Exception {
     WireMock.reset();
-  }
 
-  @Test
-  void printTeamInfo_byTeamId() throws Exception {
     stubFor(WireMock.get(urlPathEqualTo("/api/v1/teams"))
         .withQueryParam("season", equalTo("2023"))
         .withQueryParam("sportIds", equalTo("1"))
-        .withQueryParam("teamId", equalTo("137"))
+        .willReturn(aResponse()
+            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .withBody(read("teams-allmlb.json"))));
+
+    stubFor(WireMock.get(urlPathEqualTo("/api/v1/teams/137"))
         .willReturn(aResponse()
             .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .withBody(read("team-137.json"))));
@@ -66,126 +67,29 @@ final class BaseballTeamServiceTest {
         .willReturn(aResponse()
             .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
             .withBody(read("venue-2395.json"))));
+  }
 
-    // Execute.
+  @Test
+  void printTeamInfo_byTeamId() throws Exception {
     var teamInfo = execute("137");
-
-    // Verify.
-    assertThat(teamInfo).isEqualToNormalizingNewlines("""
-        Team,Jersey,Name,Position,Home Stadium
-        San Francisco Giants,31,LaMonte Wade Jr.,1B,Oracle Park
-        San Francisco Giants,41,Wilmer Flores,1B,Oracle Park
-        San Francisco Giants,39,Thairo Estrada,2B,Oracle Park
-        San Francisco Giants,7,J.D. Davis,3B,Oracle Park
-        San Francisco Giants,2,Blake Sabol,C,Oracle Park
-        San Francisco Giants,14,Patrick Bailey,C,Oracle Park
-        San Francisco Giants,5,Mike Yastrzemski,CF,Oracle Park
-        San Francisco Giants,23,Joc Pederson,DH,Oracle Park
-        San Francisco Giants,13,Austin Slater,LF,Oracle Park
-        San Francisco Giants,17,Mitch Haniger,LF,Oracle Park
-        San Francisco Giants,53,Wade Meckler,OF,Oracle Park
-        San Francisco Giants,38,Alex Cobb,P,Oracle Park
-        San Francisco Giants,57,Alex Wood,P,Oracle Park
-        San Francisco Giants,75,Camilo Doval,P,Oracle Park
-        San Francisco Giants,34,Jakob Junis,P,Oracle Park
-        San Francisco Giants,45,Kyle Harrison,P,Oracle Park
-        San Francisco Giants,62,Logan Webb,P,Oracle Park
-        San Francisco Giants,77,Luke Jackson,P,Oracle Park
-        San Francisco Giants,74,Ryan Walker,P,Oracle Park
-        San Francisco Giants,54,Scott Alexander,P,Oracle Park
-        San Francisco Giants,52,Sean Manaea,P,Oracle Park
-        San Francisco Giants,33,Taylor Rogers,P,Oracle Park
-        San Francisco Giants,43,Tristan Beck,P,Oracle Park
-        San Francisco Giants,71,Tyler Rogers,P,Oracle Park
-        San Francisco Giants,6,Casey Schmitt,SS,Oracle Park
-        San Francisco Giants,18,Paul DeJong,SS,Oracle Park
-        """);
+    assertThat(teamInfo).isEqualToNormalizingNewlines(EXPECTED_GIANTS_OUTPUT);
   }
 
   @Test
   void printTeamInfo_byTeamIdNotFound_printNotFound() throws Exception {
-    stubFor(WireMock.get(urlPathEqualTo("/api/v1/teams"))
-        .withQueryParam("season", equalTo("2023"))
-        .withQueryParam("sportIds", equalTo("1"))
-        .withQueryParam("teamId", equalTo("137"))
-        .willReturn(aResponse()
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .withStatus(HttpStatus.NOT_FOUND.value())));
-
-    // Execute.
-    var teamInfo = execute("137");
-
-    // Verify.
-    assertThat(teamInfo).isEqualToNormalizingNewlines("Not Found");
+    var teamInfo = execute("999");
+    assertThat(teamInfo).isEqualTo("Not Found");
   }
 
   @Test
   void printTeamInfo_byTeamName() throws Exception {
-    stubFor(WireMock.get(urlPathEqualTo("/api/v1/teams"))
-        .withQueryParam("season", equalTo("2023"))
-        .withQueryParam("sportIds", equalTo("1"))
-        .willReturn(aResponse()
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .withBody(read("teams-allmlb.json"))));
-
-    stubFor(WireMock.get(urlPathEqualTo("/api/v1/teams/137/roster"))
-        .willReturn(aResponse()
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .withBody(read("team-137-roster.json"))));
-
-    stubFor(WireMock.get(urlPathEqualTo("/api/v1/venues/2395"))
-        .willReturn(aResponse()
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .withBody(read("venue-2395.json"))));
-
-    // Execute.
     var teamInfo = execute("Giants");
-
-    // Verify.
-    assertThat(teamInfo).isEqualToNormalizingNewlines("""
-        Team,Jersey,Name,Position,Home Stadium
-        San Francisco Giants,31,LaMonte Wade Jr.,1B,Oracle Park
-        San Francisco Giants,41,Wilmer Flores,1B,Oracle Park
-        San Francisco Giants,39,Thairo Estrada,2B,Oracle Park
-        San Francisco Giants,7,J.D. Davis,3B,Oracle Park
-        San Francisco Giants,2,Blake Sabol,C,Oracle Park
-        San Francisco Giants,14,Patrick Bailey,C,Oracle Park
-        San Francisco Giants,5,Mike Yastrzemski,CF,Oracle Park
-        San Francisco Giants,23,Joc Pederson,DH,Oracle Park
-        San Francisco Giants,13,Austin Slater,LF,Oracle Park
-        San Francisco Giants,17,Mitch Haniger,LF,Oracle Park
-        San Francisco Giants,53,Wade Meckler,OF,Oracle Park
-        San Francisco Giants,38,Alex Cobb,P,Oracle Park
-        San Francisco Giants,57,Alex Wood,P,Oracle Park
-        San Francisco Giants,75,Camilo Doval,P,Oracle Park
-        San Francisco Giants,34,Jakob Junis,P,Oracle Park
-        San Francisco Giants,45,Kyle Harrison,P,Oracle Park
-        San Francisco Giants,62,Logan Webb,P,Oracle Park
-        San Francisco Giants,77,Luke Jackson,P,Oracle Park
-        San Francisco Giants,74,Ryan Walker,P,Oracle Park
-        San Francisco Giants,54,Scott Alexander,P,Oracle Park
-        San Francisco Giants,52,Sean Manaea,P,Oracle Park
-        San Francisco Giants,33,Taylor Rogers,P,Oracle Park
-        San Francisco Giants,43,Tristan Beck,P,Oracle Park
-        San Francisco Giants,71,Tyler Rogers,P,Oracle Park
-        San Francisco Giants,6,Casey Schmitt,SS,Oracle Park
-        San Francisco Giants,18,Paul DeJong,SS,Oracle Park
-        """);
+    assertThat(teamInfo).isEqualToNormalizingNewlines(EXPECTED_GIANTS_OUTPUT);
   }
 
   @Test
   void printTeamInfo_byTeamNameNotFound_printNotFound() throws Exception {
-    stubFor(WireMock.get(urlPathEqualTo("/api/v1/teams"))
-        .withQueryParam("season", equalTo("2023"))
-        .withQueryParam("sportIds", equalTo("1"))
-        .willReturn(aResponse()
-            .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .withBody(read("teams-allmlb.json"))));
-
-    // Execute.
     var teamInfo = execute("knicks");
-
-    // Verify.
     assertThat(teamInfo).isEqualToNormalizingNewlines("Not Found");
   }
 
@@ -209,4 +113,34 @@ final class BaseballTeamServiceTest {
     var resource = clazz.getClassLoader().getResource(path);
     return Files.readString(new File(resource.toURI()).toPath(), StandardCharsets.UTF_8);
   }
+
+  private static final String EXPECTED_GIANTS_OUTPUT = """
+      Team,Jersey,Name,Position,Home Stadium
+      San Francisco Giants,31,LaMonte Wade Jr.,1B,Oracle Park
+      San Francisco Giants,41,Wilmer Flores,1B,Oracle Park
+      San Francisco Giants,39,Thairo Estrada,2B,Oracle Park
+      San Francisco Giants,7,J.D. Davis,3B,Oracle Park
+      San Francisco Giants,2,Blake Sabol,C,Oracle Park
+      San Francisco Giants,14,Patrick Bailey,C,Oracle Park
+      San Francisco Giants,5,Mike Yastrzemski,CF,Oracle Park
+      San Francisco Giants,23,Joc Pederson,DH,Oracle Park
+      San Francisco Giants,13,Austin Slater,LF,Oracle Park
+      San Francisco Giants,17,Mitch Haniger,LF,Oracle Park
+      San Francisco Giants,53,Wade Meckler,OF,Oracle Park
+      San Francisco Giants,38,Alex Cobb,P,Oracle Park
+      San Francisco Giants,57,Alex Wood,P,Oracle Park
+      San Francisco Giants,75,Camilo Doval,P,Oracle Park
+      San Francisco Giants,34,Jakob Junis,P,Oracle Park
+      San Francisco Giants,45,Kyle Harrison,P,Oracle Park
+      San Francisco Giants,62,Logan Webb,P,Oracle Park
+      San Francisco Giants,77,Luke Jackson,P,Oracle Park
+      San Francisco Giants,74,Ryan Walker,P,Oracle Park
+      San Francisco Giants,54,Scott Alexander,P,Oracle Park
+      San Francisco Giants,52,Sean Manaea,P,Oracle Park
+      San Francisco Giants,33,Taylor Rogers,P,Oracle Park
+      San Francisco Giants,43,Tristan Beck,P,Oracle Park
+      San Francisco Giants,71,Tyler Rogers,P,Oracle Park
+      San Francisco Giants,6,Casey Schmitt,SS,Oracle Park
+      San Francisco Giants,18,Paul DeJong,SS,Oracle Park
+      """;
 }

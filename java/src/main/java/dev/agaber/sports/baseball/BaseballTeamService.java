@@ -88,10 +88,7 @@ public final class BaseballTeamService {
     var season = LocalDate.now(clock).getYear();
     var uri = UriComponentsBuilder.newInstance()
         .uri(URI.create(config.getStatsApiUrl()))
-        .path("/api/v1/teams")
-        .queryParam("season", season)
-        .queryParam("sportIds", "1")
-        .queryParam("teamId", teamId)
+        .path("/api/v1/teams/" + teamId)
         .build(true)
         .toUri();
     return webClient.get()
