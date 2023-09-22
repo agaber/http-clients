@@ -1,0 +1,11 @@
+{
+  "venues": [
+    {
+      "id": 2395,
+      "name": "Oracle Park",
+      "link": "/api/v1/venues/2395",
+      "active": true,
+      "season": "2023"
+    }
+  ]
+}
