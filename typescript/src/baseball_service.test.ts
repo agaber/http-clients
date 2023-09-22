@@ -59,7 +59,7 @@ describe('Baseball service', () => {
 
 function read(fileName: string): string {
   const currentDir = __dirname.replace('/dist', '/src')
-  return fs.readFileSync(`${currentDir}/testing/${fileName}`, 'utf-8');
+  return fs.readFileSync(`${currentDir}/testdata/${fileName}`, 'utf-8');
 }
 
 const EXPECTED_GIANTS = `Team,Jersey,Name,Position,Home Stadium

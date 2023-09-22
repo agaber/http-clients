@@ -93,7 +93,7 @@ func TestLookupByTeamNameNotFound(t *testing.T) {
 }
 
 func read(fileName string) string {
-	file, err := os.Open(fmt.Sprintf("./testing/%s", fileName))
+	file, err := os.Open(fmt.Sprintf("./testdata/%s", fileName))
 	if err != nil {
 		panic(fmt.Sprintf("Error opening file: %v", err))
 	}

@@ -11,6 +11,7 @@ functionally identical to the other versions in this repo.
 ### Test and Compile
 
 ```sh
+$ cd src/
 $ go test ./...
 $ go build
 ```
