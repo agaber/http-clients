@@ -14,12 +14,8 @@ public final class FakeClock extends Clock {
     this.zoneId = zoneId;
   }
 
-  public FakeClock(Instant now) {
-    this(now, ZoneId.systemDefault());
-  }
-
   public FakeClock(LocalDate currentDate) {
-    this(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+    this(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant(), ZoneId.systemDefault());
   }
 
   @Override
